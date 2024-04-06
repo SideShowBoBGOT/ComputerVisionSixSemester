@@ -1,306 +1,253 @@
-'''
-Розробити програмний скрипт, що забезпечує ідентифікацію бінарних зображень 6 спеціальних знаків,
-заданих матрицею растра. Для ідентифікації синтезувати, навчити та застосувати штучну нейронну мережу в «сирому» вигляді
-реалізації матричних операцій.
-Обрані символи: &, ∧, ∨, ↵, ∑, ≡.
-'''
+"""
+Розробити програмний скрипт, який забезпечує ідентифікацію бінарних зображень 4 спеціальних символів,
+заданих растровою матрицею. Для ідентифікації синтезувати, навчити та застосувати штучну нейронну мережу
+в "сирому" вигляді реалізації матричних операцій.
+Вибрані символи: @, #, ?, &.
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-#----------------------------------- вхідні дані DataSet масив ------------------------------------
-def data_x ():
-
-    '''
-    Вхідна частина навчального DataSet масиву
-    формування вхідних бінарних даних графічних примітивів
+# Вхідні дані DataSet масиву
+def create_input_data():
+    """
+    Вхідна частина навчального DataSet масиву.
+    Формування вхідних бінарних даних графічних примітивів.
     :return: x - np.array
-    '''
+    """
 
-    # &
-    a = [0, 0, 1, 1, 0, 0,
-         0, 1, 0, 0, 1, 0,
-         0, 1, 0, 0, 1, 0,
-         0, 0, 1, 1, 0, 0,
-         0, 1, 0, 0, 1, 1,
-         1, 0, 0, 0, 1, 0,
-         1, 0, 0, 0, 1, 1,
-         0, 1, 1, 1, 0, 0,]
-    # ∧
-    b = [0, 0, 1, 1, 0, 0,
-         0, 0, 1, 1, 0, 0,
-         0, 1, 0, 0, 1, 0,
-         0, 1, 0, 0, 1, 0,
-         0, 1, 0, 0, 1, 0,
-         1, 0, 0, 0, 0, 1,
-         1, 0, 0, 0, 0, 1,
-         1, 0, 0, 0, 0, 1,]
-    # ∨
-    c = [1, 0, 0, 0, 0, 1,
-         1, 0, 0, 0, 0, 1,
-         1, 0, 0, 0, 0, 1,
-         0, 1, 0, 0, 1, 0,
-         0, 1, 0, 0, 1, 0,
-         0, 1, 0, 0, 1, 0,
-         0, 0, 1, 1, 0, 0,
-         0, 0, 1, 1, 0, 0,]
-    #  ↵
-    d = [0, 0, 0, 0, 0, 1,
-         0, 0, 0, 0, 0, 1,
-         0, 0, 1, 0, 0, 1,
-         0, 1, 0, 0, 0, 1,
-         1, 1, 1, 1, 1, 1,
-         0, 1, 0, 0, 0, 0,
-         0, 0, 1, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, ]
-    # ∑
-    e = [1, 1, 1, 1, 1, 1,
-         1, 0, 0, 0, 0, 0,
-         0, 1, 0, 0, 0, 0,
-         0, 0, 1, 1, 0, 0,
-         0, 0, 1, 1, 0, 0,
-         0, 1, 0, 0, 0, 0,
-         1, 0, 0, 0, 0, 0,
-         1, 1, 1, 1, 1, 1, ]
-    # ≡
-    f = [0, 0, 0, 0, 0, 0,
-         1, 1, 1, 1, 1, 1,
-         0, 0, 0, 0, 0, 0,
-         1, 1, 1, 1, 1, 1,
-         0, 0, 0, 0, 0, 0,
-         1, 1, 1, 1, 1, 1,
-         0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, ]
-    # ----- Візуалізація --------
-    plt.subplot(2, 3, 1)
-    plt.imshow(np.array(a).reshape(8, 6))
-    plt.subplot(2, 3, 2)
-    plt.imshow(np.array(b).reshape(8, 6))
-    plt.subplot(2, 3, 3)
-    plt.imshow(np.array(c).reshape(8, 6))
-    plt.subplot(2, 3, 4)
-    plt.imshow(np.array(d).reshape(8, 6))
-    plt.subplot(2, 3, 5)
-    plt.imshow(np.array(e).reshape(8, 6))
-    plt.subplot(2, 3, 6)
-    plt.imshow(np.array(f).reshape(8, 6))
+    characters = [
+        np.array([
+            0, 1, 1, 1, 1, 0,
+            1, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 1, 1,
+            1, 0, 0, 1, 0, 1,
+            1, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 1,
+            0, 1, 1, 1, 1, 0,
+        ]).reshape(8, 6),
+        np.array([
+            0, 1, 0, 1, 0, 1,
+            0, 1, 0, 1, 0, 1,
+            1, 1, 1, 1, 1, 1,
+            0, 1, 0, 1, 0, 1,
+            1, 1, 1, 1, 1, 1,
+            0, 1, 0, 1, 0, 1,
+            0, 1, 0, 1, 0, 1,
+            0, 0, 0, 0, 0, 0,
+        ]).reshape(8, 6),
+        np.array([
+            0, 1, 1, 1, 1, 0,
+            1, 0, 0, 0, 0, 1,
+            0, 0, 0, 0, 0, 1,
+            0, 0, 0, 1, 1, 0,
+            0, 0, 1, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 1, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+        ]).reshape(8, 6),
+        np.array([
+            0, 0, 1, 1, 0, 0,
+            0, 1, 0, 0, 1, 0,
+            0, 1, 0, 0, 1, 0,
+            0, 0, 1, 1, 0, 0,
+            0, 1, 0, 0, 1, 1,
+            1, 0, 0, 0, 1, 0,
+            1, 0, 0, 0, 1, 1,
+            0, 1, 1, 1, 0, 0,
+        ]).reshape(8, 6)
+    ]
+
+    # Візуалізація
+    fig, axs = plt.subplots(2, 2, figsize=(6, 6))
+    for i, ax in enumerate(axs.flatten()):
+        ax.imshow(characters[i], cmap='binary')
+        ax.axis('off')
+    plt.tight_layout()
     plt.show()
-    # ----- Вхідна частина навчального DataSet масиву --------
-    x = [np.array(a).reshape(1, 48), np.array(b).reshape(1, 48), np.array(c).reshape(1, 48), np.array(d).reshape(1, 48),
-         np.array(e).reshape(1, 48), np.array(f).reshape(1, 48)]
 
-    return x
+    # Вхідна частина навчального DataSet масиву
+    input_data = [char.reshape(1, 48) for char in characters]
+
+    return input_data
 
 
-def data_y():
-    '''
-    Вихідна частина навчального DataSet масиву - відповідь
-    формування кодових комбінацій бінарних відповідей в просторі 6 значень
+def create_output_data():
+    """
+    Вихідна частина навчального DataSet масиву - відповідь.
+    Формування кодових комбінацій бінарних відповідей у просторі 4 значень.
     :return: y - np.array
-    '''
+    """
 
-    # ----- Вихідна частина навчального DataSet масиву --------
-    out_abc = [[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0],
-               [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]]
-    y = np.array(out_abc)
-
-    return y
+    # Вихідна частина навчального DataSet масиву
+    output_data = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+    return np.array(output_data)
 
 
-# ----------------------------------- конструювання нейромережі ------------------------------------
+# Побудова нейронної мережі
 
-# ----- функція активності - сігмоід -----
+# Функція активації - сигмоїда
 def sigmoid(x):
-    '''
+    """
     :param x: - np.array DataSet in
-    :return: activation function - sigmoid
-    '''
+    :return: функція активації - сигмоїда
+    """
 
-    return (1 / (1 + np.exp(-x)))
+    return 1 / (1 + np.exp(-x))
 
 
-# ----- конструювання нейронної мережі  -----
-def f_forward(x, w1, w2):
-    '''
-    Головна компонента конструювання нейронної мережі.
-    Цим та подальшими відрізняється цей приклад від звичайного пресептрона
+# Побудова нейронної мережі
+def forward_propagation(x, weights1, weights2):
+    """
+    Головний компонент побудови нейронної мережі.
+    Це та наступне відрізняє цей приклад від звичайного перцептрона.
     Архітектурні залежності:
     1-й рівень: вхідний рівень (1, 48);
-    2-й шар: прихований шар (1, 6);
-    3-й шар: вихідний рівень (6, 6).
-    Графічне відображення архітектури див.Neural_Networks_numpy_2.jpg
+    2-й шар: прихований шар (1, 4);
+    3-й шар: вихідний рівень (4, 4).
+    Графічне представлення архітектури дивись Neural_Networks_numpy_2.jpg
 
     :param x: np.array -
-    :param w1: початкові вагові коефіціенти 1 прошарку (вхідного)
-    :param w2: початкові вагові коефіціенти 2 прошарку (прихованого)
-    :return: a2 - вектор вихідних параметрів мережі - 3 компоненти
-    '''
+    :param weights1: початкові вагові коефіцієнти шару 1 (вхідного)
+    :param weights2: початкові вагові коефіцієнти шару 2 (прихованого)
+    :return: output_vals - вектор вихідних параметрів мережі - 4 компоненти
+    """
 
-    # структуру вхідного прошарку визначає простір вхідних параметрів x
+    # Структура вхідного шару визначається простором вхідних параметрів x
 
-    # прихований прошарок
-    z1 = x.dot(w1)  # зважені вхідні параметри вхідного прошарку 1
-    a1 = sigmoid(z1)  # аддитивна згортка - вихід з прошарку 1 - вхід прошарку 2
+    # Прихований шар
+    hidden_inputs = x.dot(weights1)  # зважені вхідні параметри вхідного шару 1
+    hidden_outputs = sigmoid(hidden_inputs)  # адитивна згортка - вихід з шару 1 - вхід до шару 2
 
-    # вихідний прошарок
-    z2 = a1.dot(w2)  # зважені вхідні параметри прошарку 2 на вихідний прошарок
-    a2 = sigmoid(z2)  # вихідні параметри нейромережі
+    # Вихідний шар
+    final_inputs = hidden_outputs.dot(weights2)  # зважені вхідні параметри шару 2 до вихідного шару
+    final_outputs = sigmoid(final_inputs)  # вихідні параметри нейронної мережі
 
-    return (a2)
-
-
-# ------- ініціалізація початкових значення вагових коефіціентів мережі методом рандомізації
-def generate_wt(x, y):
-    l = []
-    for i in range(x * y):
-        l.append(np.random.randn())
-    return (np.array(l).reshape(x, y))
+    return final_outputs
 
 
-# ------- контроль навченості мережі за середньоквадратичною помилкою mean square error(MSE)
-def loss(out, Y):
-    s = (np.square(out - Y))
-    s = np.sum(s) / len(y)
-    return (s)
+# Ініціалізація початкових значень вагових коефіцієнтів мережі методом рандомізації
+def initialize_weights(rows, cols):
+    weights = []
+    for _ in range(rows * cols):
+        weights.append(np.random.randn())
+    return np.array(weights).reshape(rows, cols)
 
 
-# ------- зворотне поширення помилки -------------------------------------------------------
-def back_prop(x, y, w1, w2, alpha):
-    # прихований прошарок
-    z1 = x.dot(w1)  # зважені вхідні параметри вхідного прошарку 1
-    a1 = sigmoid(z1)  # аддитивна згортка - вихід з прошарку 1 - вхід прошарку 2
-
-    # вихідний прошарок
-    z2 = a1.dot(w2)  # зважені вхідні параметри прошарку 2 на вихідний прошарок
-    a2 = sigmoid(z2)  # вихідні параметри нейромережі
-
-    # похибка на вихідному прошарку
-    d2 = (a2 - y)
-    d1 = np.multiply((w2.dot((d2.transpose()))).transpose(),
-                     (np.multiply(a1, 1 - a1)))
-
-    # градієнт для w1 і w2
-    w1_adj = x.transpose().dot(d1)
-    w2_adj = a1.transpose().dot(d2)
-
-    # оновлення параметрів з контролем помилки alpha
-    w1 = w1 - (alpha * (w1_adj))
-    w2 = w2 - (alpha * (w2_adj))
-
-    return (w1, w2)
+# Контроль навчання мережі за допомогою середньоквадратичної помилки (MSE)
+def calculate_loss(output, target):
+    squared_error = np.square(output - target)
+    loss = np.sum(squared_error) / len(target)
+    return loss
 
 
-# ------- тренування мережі з контролем помилки alpha на epoch -----------------------------
-def train(x, Y, w1, w2, alpha=0.01, epoch=10):
-    acc = []
-    losss = []
-    for j in range(epoch):
-        l = []
-        for i in range(len(x)):
-            out = f_forward(x[i], w1, w2)
-            l.append((loss(out, Y[i])))
-            w1, w2 = back_prop(x[i], y[i], w1, w2, alpha)
-        print("epochs:", j + 1, "======== acc:", (1 - (sum(l) / len(x))) * 100)
-        acc.append((1 - (sum(l) / len(x))) * 100)
-        losss.append(sum(l) / len(x))
-    return (acc, losss, w1, w2)
+# Зворотне поширення похибки
+def backpropagation(x, y, weights1, weights2, learning_rate):
+    # Прихований шар
+    hidden_inputs = x.dot(weights1)  # зважені вхідні параметри вхідного шару 1
+    hidden_outputs = sigmoid(hidden_inputs)  # адитивна згортка - вихід з шару 1 - вхід до шару 2
+
+    # Вихідний шар
+    final_inputs = hidden_outputs.dot(weights2)  # зважені вхідні параметри шару 2 до вихідного шару
+    final_outputs = sigmoid(final_inputs)  # вихідні параметри нейронної мережі
+
+    # Похибка на вихідному шарі
+    output_errors = final_outputs - y
+    hidden_errors = np.multiply((weights2.dot((output_errors.transpose()))).transpose(),
+                                (np.multiply(hidden_outputs, 1 - hidden_outputs)))
+
+    # Градієнт для weights1 та weights2
+    weights1_gradients = x.transpose().dot(hidden_errors)
+    weights2_gradients = hidden_outputs.transpose().dot(output_errors)
+
+    # Оновлення параметрів з контролем помилки learning_rate
+    weights1 -= learning_rate * weights1_gradients
+    weights2 -= learning_rate * weights2_gradients
+
+    return weights1, weights2
 
 
-# ------- ідентифікація літералів / передбачення ------------------------------------------
-def predict(x, w1, w2):
-    '''
-    Функція прогнозу прийматиме такі аргументи:
+# Навчання мережі з контролем помилки learning_rate на епоху
+def train_network(x, y, weights1, weights2, learning_rate=0.01, num_epochs=10):
+    def update_weights(inputs, targets, w1, w2, lr):
+        output = forward_propagation(inputs, w1, w2)
+        loss = calculate_loss(output, targets)
+        updated_w1, updated_w2 = backpropagation(inputs, targets, w1, w2, lr)
+        return loss, updated_w1, updated_w2
+
+    def train_epoch(epoch, data, labels, w1, w2, lr):
+        epoch_loss, updated_w1, updated_w2 = zip(*[update_weights(x, y, w1, w2, lr) for x, y in zip(data, labels)])
+        avg_loss = sum(epoch_loss) / len(data)
+        accuracy = (1 - avg_loss) * 100
+        print(f"Епоха: {epoch + 1}, Точність: {accuracy:.2f}%")
+        return accuracy, avg_loss, updated_w1[-1], updated_w2[-1]
+
+    accuracies, losses, trained_weights1, trained_weights2 = zip(*[train_epoch(epoch, x, y, weights1, weights2, learning_rate) for epoch in range(num_epochs)])
+    return accuracies, losses, trained_weights1[-1], trained_weights2[-1]
+
+
+# Ідентифікація символів / прогнозування
+def predict_symbol(x, weights1, weights2):
+    """
+    Функція прогнозування приймає наступні аргументи:
     :param x: матриця зображення
-    :param w1: треновані ваги
-    :param w2: треновані ваги
-    :return: відображає ідентифікований літерал - графічну формиу
-    '''
+    :param weights1: натреновані ваги
+    :param weights2: натреновані ваги
+    :return: відображає ідентифікований символ - графічну форму
+    """
 
-    Out = f_forward(x, w1, w2)
-    maxm = 0
-    k = 0
-    for i in range(len(Out[0])):
-        if (maxm < Out[0][i]):
-            maxm = Out[0][i]
-            k = i
+    def get_predicted_class(output):
+        return max(range(len(output[0])), key=lambda i: output[0][i])
 
-    if (k == 0):
-        print("Image of symbol &.", '\n')
-    elif (k == 1):
-        print("Image of symbol ∧.", '\n')
-    elif (k == 2):
-        print("Image of symbol ∨.", '\n')
-    elif (k == 3):
-        print("Image of symbol ↵.", '\n')
-    elif (k == 4):
-        print("Image of symbol ∑.", '\n')
-    else:
-        print("Image of symbol ≡.", '\n')
-    plt.imshow(x.reshape(8, 6))
+    def get_symbol(predicted_class):
+        symbols = ["@", "#", "?", "&"]
+        return symbols[predicted_class]
+
+    output = forward_propagation(x, weights1, weights2)
+    predicted_class = get_predicted_class(output)
+    symbol = get_symbol(predicted_class)
+
+    print(f"Зображення символу {symbol}.\n")
+    plt.imshow(x.reshape(8, 6), cmap='binary')
     plt.show()
 
     return
 
 
 if __name__ == '__main__':
-    # ------------------- вхідні дані -----------------------------------
-    x = data_x()
-    y = data_y()
-    print('DataSet-масив: навчальна пара для навчання із вчителем')
-    print('х = ', x, '\n')
-    print('y = ', y, '\n')
+    # Вхідні дані
+    input_data = create_input_data()
+    output_data = create_output_data()
+    print('Масив DataSet: навчальна пара для навчання з учителем')
+    print('Вхідні дані:', input_data, '\n')
+    print('Вихідні дані:', output_data, '\n')
 
-    # --- ініціалізація вагових коєфіцієнтів на 2 прошарка з відповідним до характеристик прошарків складом параметрів
-    w1 = generate_wt(48, 6)
-    w2 = generate_wt(6, 6)
+    # Ініціалізація вагових коефіцієнтів для 2 шарів
+    layer_sizes = [(48, 4), (4, 4)]
+    weights = [initialize_weights(*size) for size in layer_sizes]
+    print('Ініціалізація вагових коефіцієнтів для 2 шарів')
 
-    print('ініціалізація вагових коєфіцієнтів на 2 прошарка')
-    # print('(w1 = ', w1, '\n')
-    # print('w2 = ', w2, '\n')
+    # Навчання мережі з контролем помилки learning_rate на епоху
+    print('Навчання мережі з контролем помилки learning_rate на епоху')
+    accuracies, losses, *trained_weights = train_network(input_data, output_data, *weights, 0.1, 70)
 
-    # ------- тренування мережі з контролем помилки alpha на epoch -------
-    print('тренування мережі з контролем помилки alpha на epoch')
-    acc, losss, w1, w2 = train(x, y, w1, w2, 0.1, 70)
+    # Контроль / візуалізація параметрів навчання
+    training_metrics = [
+        ('Точність', accuracies),
+        ('Втрати', losses)
+    ]
+    for metric, data in training_metrics:
+        plt.figure()
+        plt.plot(data)
+        plt.ylabel(metric)
+        plt.xlabel("Епохи")
+        plt.show()
 
-    # натреновані вагови коефіцієнти
-    # print('натреновані вагови коефіцієнти  на 2 прошарка')
-    # print('(w1 = ', w1, '\n')
-    # print('w2 = ', w2, '\n')
-
-    # -------------- контроль / візуалізація параметрів тренування -------
-    # точність
-    plt.plot(acc)
-    plt.ylabel('Точність')
-    plt.xlabel("Епохи:")
-    plt.show()
-    # втрати
-    plt.plot(losss)
-    plt.ylabel('Втрати')
-    plt.xlabel("Епохи:")
-    plt.show()
-
-    # ------- ідентифікація символів / передбачення ---------------------
-    print('Вхідні параметри відповідають символу "&"')
-    print('Результат ідентифікації:')
-    predict(x[0], w1, w2)
-
-    print('Вхідні параметри відповідають символу "∧"')
-    print('Результат ідентифікації:')
-    predict(x[1], w1, w2)
-
-    print('Вхідні параметри відповідають символу "∨"')
-    print('Результат ідентифікації:')
-    predict(x[2], w1, w2)
-
-    print('Вхідні параметри відповідають символу "↵"')
-    print('Результат ідентифікації:')
-    predict(x[3], w1, w2)
-
-    print('Вхідні параметри відповідають символу "∑"')
-    print('Результат ідентифікації:')
-    predict(x[4], w1, w2)
-
-    print('Вхідні параметри відповідають символу "≡"')
-    print('Результат ідентифікації:')
-    predict(x[5], w1, w2)
+    # Ідентифікація символів / прогнозування
+    symbols = ["@", "#", "?", "&"]
+    for i, symbol in enumerate(symbols):
+        print(f'Вхідні параметри відповідають символу "{symbol}"')
+        print('Результат ідентифікації:')
+        predict_symbol(input_data[i], *trained_weights)
